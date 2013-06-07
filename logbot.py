@@ -72,7 +72,7 @@ SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
 CHANNELS = ["#wfs-india", "#sunu"]
-OPERATORS = ["sunu", "SunuTheNinja"]
+OPERATORS = ["kaustavdm", "sunu", "SunuTheNinja"]
 NICK = "floggy"
 NICK_PASS = ""
 
@@ -445,12 +445,7 @@ class Logbot(SingleServerIRCBot):
             elif cmd == "learn" and user in self.operators and '"' in msg:
                 args = re.findall('"([^"]*)"', msg)
                 print args
-                if args and len(args) == 1:
-                    command = msg.split()[2].lower()
-                    self.commands[command] = args[0]
-                    m = "{0}: All done!".format(user)
-                    c.privmsg(e.target(), m)
-                elif args and len(args) == 2:
+                if args and len(args) == 2:
                     command = args[0].lower()
                     self.commands[command] = args[1]
                     m = "{0}: All done!".format(user)
