@@ -38,6 +38,8 @@ import os
 import ftplib
 import sys
 import itertools
+import feedparser
+
 from time import strftime
 try:
     from datetime import datetime
@@ -80,7 +82,7 @@ NICK_PASS = ""
 LOG_FOLDER = "logs"
 
 HELP_MSG = "WFS-India - Women in Free Software and Culture in India - www.wfs-india.org. \
-Useful commands - {0}. Usage: {1}: <command>"
+Some useful commands - 'logs', 'website', 'events'. Usage: {1}: <command>"
 
 
 # FTP Configuration
@@ -97,8 +99,21 @@ DEFAULT_TIMEZONE = 'UTC+5:30'
 
 default_commands = {
     "hi": "Hello wonderful person!",
+    "hi": "Hello wonderful person!",
+    "hello": "Hi! How're you doing?",
+    "hello!": "Hi! How're you doing?",
     "logs": "IRC chat logs can be found at http://irclogs.wfs-india.org",
-    "website": "Please visit us at http://www.wfs-india.org"
+    "website": "Please visit us at http://www.wfs-india.org",
+    "who are you?": "Hi, I am LoggerBotX, junior assistant of Darth Vader from the planet Vulcan,\
+                    and a bot on the #wfs-india channel on freenode.",
+    "who are you": "Hi, I am LoggerBotX, junior assistant of Darth Vader from the planet Vulcan,\
+                    and a bot on the #wfs-india channel on freenode.",
+}
+
+default_feed_commands = {
+    "events": "http://www.wfs-india.org/taxonomy/term/9/all/feed",
+    "news": "http://www.wfs-india.org/taxonomy/term/5/all/feed",
+    "articles": "http://www.wfs-india.org/taxonomy/term/10/all/feed",
 }
 
 default_format = {
@@ -224,7 +239,7 @@ class Logbot(SingleServerIRCBot):
     """The Bot."""
     def __init__(self, server, port, server_pass=None, channels=[],
                  nick="timber", nick_pass=None, format=default_format, commands=default_commands,
-                 operators=OPERATORS):
+                 operators=OPERATORS, feed_commands = default_feed_commands):
         SingleServerIRCBot.__init__(self,
                                     [(server, port, server_pass)],
                                     nick,
@@ -233,6 +248,7 @@ class Logbot(SingleServerIRCBot):
         self.chans = [x.lower() for x in channels]
         self.format = format
         self.commands = commands
+        self.feed_commands = feed_commands
         self.operators = operators
         self.set_ftp()
         self.count = 0
@@ -439,8 +455,11 @@ class Logbot(SingleServerIRCBot):
             user = e.source().split("!")[0]
             cmd = msg.split()[1].lower()
             if cmd == "help":
-                help_msg = HELP_MSG.format(repr(self.commands.keys()), NICK)
+                help_msg = HELP_MSG.format(NICK)
                 m = "{0}: {1}".format(user, help_msg)
+                c.privmsg(e.target(), m)
+            elif cmd == "operators":
+                m = "{0}: My operators are {1}".format(user, repr(self.operators))
                 c.privmsg(e.target(), m)
             elif cmd == "learn" and user in self.operators and '"' in msg:
                 args = re.findall('"([^"]*)"', msg)
@@ -464,22 +483,31 @@ class Logbot(SingleServerIRCBot):
                 self.operators.append(candidate)
                 m = "{0}: {1} has been added as an operator".format(user, candidate)
                 c.privmsg(e.target(), m)
+
+            elif cmd in self.feed_commands:
+                feeds = feedparser.parse(self.feed_commands[cmd])["entries"][:5]
+                if not feeds:
+                    m = "{0}: No entries in {1} yet! Check back later.".format(user, cmd)
+                    c.privmsg(e.target(), m)
+                else:
+                    entries = []
+                    for feed in feeds:
+                        entries.append("{0} : {1}  ||  ".format(feed['title'], feed['link']))
+                    m = "{0}: These are our 5 recent events - {1}".format(user, ''.join(entries))
+                    c.privmsg(e.target(), m)
+
             else:
                 match = 0
-                for k in self.commands.keys():
-                    if k == cmd:
-                        m = "{0}: {1}".format(user, self.commands[k])
-                        c.privmsg(e.target(), m)
-                        match = 1
-                        break
+                if cmd in self.commands.keys():
+                    m = "{0}: {1}".format(user, self.commands[cmd])
+                    c.privmsg(e.target(), m)
+                    match = 1
                 if not match:
                     cmd = msg.split(' ', 1)[1].lower()
-                    for k in self.commands.keys():
-                        if k == cmd:
-                            m = "{0}: {1}".format(user, self.commands[k])
-                            c.privmsg(e.target(), m)
-                            match = 1
-                            break
+                    if cmd in self.commands.keys():
+                        m = "{0}: {1}".format(user, self.commands[cmd])
+                        c.privmsg(e.target(), m)
+                        match = 1
         self.write_event("pubmsg", e)
 
     def on_pubnotice(self, c, e):
