@@ -110,6 +110,7 @@ default_commands = {
                     and a bot on the #wfs-india channel on freenode.",
     "who are you": "Hi, I am LoggerBotX, junior assistant of Darth Vader from the planet Vulcan,\
                     and a bot on the #wfs-india channel on freenode.",
+    "code": "My code is at https://github.com/sunu/logbot. Feel free to fork me."
 }
 
 default_feed_commands = {
@@ -499,7 +500,7 @@ class Logbot(SingleServerIRCBot):
                     entries = []
                     for (counter,feed) in enumerate(feeds, start=1):
                         entries.append("({0}){1} : {2}    ".format(counter, feed['title'], feed['link']))
-                    m = "{0}: These are our recent events - {1}".format(user, ''.join(entries))
+                    m = "{0}: {1}:- {2}".format(user, cmd.title(), ''.join(entries))
                     c.privmsg(e.target(), m)
 
             else:
