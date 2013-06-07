@@ -69,15 +69,13 @@ DEBUG = False
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS=["#excid3","#keryx"]
-NICK = "timber"
+CHANNELS=["#sunu", "#wfs-india"]
+OPERATORS = ["sunu", "SunuTheNinja"]
+NICK = "LoggerBotX"
 NICK_PASS = ""
 
 # The local folder to save logs
 LOG_FOLDER = "logs"
-
-# The message returned when someone messages the bot
-HELP_MESSAGE = "Check out http://excid3.com"
 
 # FTP Configuration
 FTP_SERVER = ""
@@ -89,20 +87,24 @@ FTP_FOLDER = ""
 FTP_WAIT = 25
 
 CHANNEL_LOCATIONS_FILE = os.path.expanduser("~/.logbot-channel_locations.conf")
-DEFAULT_TIMEZONE = 'UTC'
+DEFAULT_TIMEZONE = 'UTC+5:30'
+
+default_commands = {
+    "hi": "Hello wonderful person!",
+    "logs": "oh noes, I forgot where they were",
+}
 
 default_format = {
-    "help" : HELP_MESSAGE,
-    "action" : '<span class="person" style="color:%color%">* %user% %message%</span>',
-    "join" : '-!- <span class="join">%user%</span> [%host%] has joined %channel%',
-    "kick" : '-!- <span class="kick">%user%</span> was kicked from %channel% by %kicker% [%reason%]',
-    "mode" : '-!- mode/<span class="mode">%channel%</span> [%modes% %person%] by %giver%',
-    "nick" : '<span class="nick">%old%</span> is now known as <span class="nick">%new%</span>',
-    "part" : '-!- <span class="part">%user%</span> [%host%] has parted %channel%',
-    "pubmsg" : '<span class="person" style="color:%color%">&lt;%user%&gt;</span> %message%',
-    "pubnotice" : '<span class="notice">-%user%:%channel%-</span> %message%',
-    "quit" : '-!- <span class="quit">%user%</span> has quit [%message%]',
-    "topic" : '<span class="topic">%user%</span> changed topic of <span class="topic">%channel%</span> to: %message%',
+    "action": '<span class="person" style="color:%color%">* %user% %message%</span>',
+    "join": '-!- <span class="join">%user%</span> [%host%] has joined %channel%',
+    "kick": '-!- <span class="kick">%user%</span> was kicked from %channel% by %kicker% [%reason%]',
+    "mode": '-!- mode/<span class="mode">%channel%</span> [%modes% %person%] by %giver%',
+    "nick": '<span class="nick">%old%</span> is now known as <span class="nick">%new%</span>',
+    "part": '-!- <span class="part">%user%</span> [%host%] has parted %channel%',
+    "pubmsg": '<span class="person" style="color:%color%">&lt;%user%&gt;</span> %message%',
+    "pubnotice": '<span class="notice">-%user%:%channel%-</span> %message%',
+    "quit": '-!- <span class="quit">%user%</span> has quit [%message%]',
+    "topic": '<span class="topic">%user%</span> changed topic of <span class="topic">%channel%</span> to: %message%',
 }
 
 html_header = """<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
@@ -205,12 +207,12 @@ def replace_color(code, text):
         text = text,
     )
 
-
 ### Logbot class
 
 class Logbot(SingleServerIRCBot):
     def __init__(self, server, port, server_pass=None, channels=[],
-                 nick="timber", nick_pass=None, format=default_format):
+                 nick="timber", nick_pass=None, format=default_format, commands=default_commands,
+                 operators=OPERATORS):
         SingleServerIRCBot.__init__(self,
                                     [(server, port, server_pass)],
                                     nick,
@@ -218,6 +220,8 @@ class Logbot(SingleServerIRCBot):
 
         self.chans = [x.lower() for x in channels]
         self.format = format
+        self.commands = commands
+        self.operators = operators
         self.set_ftp()
         self.count = 0
         self.nick_pass = nick_pass
@@ -306,7 +310,7 @@ class Logbot(SingleServerIRCBot):
             print "Finished uploading"
 
     def append_log_msg(self, channel, msg):
-        print "%s >>> %s" % (channel, msg)
+        # print "%s >>> %s" % (channel, msg)
         #Make sure the channel is always lowercase to prevent logs with other capitalisations to be created
         channel_title = channel
         channel = channel.lower()
@@ -408,7 +412,32 @@ class Logbot(SingleServerIRCBot):
 
     def on_pubmsg(self, c, e):
         if e.arguments()[0].startswith(NICK):
-            c.privmsg(e.target(), self.format["help"])
+            print repr(e.arguments()), repr(e.target()), repr(e.source()), repr(e.eventtype())
+            msg = e.arguments()[0]
+            user = e.source().split("!")[0]
+            cmd = msg.split()[1]
+            if cmd == "help":
+                help_msg = "The available commands are {0}".format(repr(self.commands.keys()))
+                m = "{0}: {1}".format(user, help_msg)
+                c.privmsg(e.target(), m)
+            elif cmd == "learn" and user in self.operators and '"' in msg:
+                command = msg.split()[2]
+                args = re.findall('"([^"]*)"', msg)
+                if args and len(args) == 1:
+                    self.commands[command] = args[0]
+                    m = "{0}: All done!".format(user)
+                    c.privmsg(e.target(), m)
+            elif cmd == "addop" and user in self.operators:
+                candidate = msg.split()[2]
+                self.operators.append(candidate)
+                m = "{0}: {1} has been added as an operator".format(user, candidate)
+                c.privmsg(e.target(), m)
+            else:
+                for k in self.commands.keys():
+                    if k == cmd:
+                        m = "{0}: {1}".format(user, self.commands[k])
+                        c.privmsg(e.target(), m)
+
         self.write_event("pubmsg", e)
 
     def on_pubnotice(self, c, e):
@@ -463,3 +492,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
