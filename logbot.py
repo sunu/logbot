@@ -423,8 +423,7 @@ class Logbot(SingleServerIRCBot):
     def on_join(self, c, e):
         user = e.source().split("!")[0]
         if user != NICK:
-            m = "{0}: Hi! Welcome aboard on #wfs-india. Enjoy your stay here!\
-            For help type \"{1}: help\"".format(user, NICK)
+            m = "{0}: Hi! Welcome aboard on #wfs-india. Enjoy your stay here! For help type \"{1}: help\"".format(user, NICK)
             c.privmsg(e.target(), m)
             #self.write_event("pubmsg", e)
         self.write_event("join", e)
@@ -520,7 +519,7 @@ class Logbot(SingleServerIRCBot):
                             entries = []
                             for (counter,feed) in enumerate(feeds, start=1):
                                 entries.append("({0}){1} : {2}    ".format(counter, feed['title'], feed['link']))
-                            m = "{0}: These are our recent events - {1}".format(user, ''.join(entries))
+                            m = "{0}: {1}:- {2}".format(user, cmd.title(), ''.join(entries))
                             c.privmsg(e.target(), m)
 
                     elif cmd in self.commands.keys():
