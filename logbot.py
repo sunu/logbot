@@ -428,13 +428,13 @@ class Logbot(SingleServerIRCBot):
             print repr(e.arguments()), repr(e.target()), repr(e.source()), repr(e.eventtype())
             msg = e.arguments()[0]
             user = e.source().split("!")[0]
-            cmd = msg.split()[1]
+            cmd = msg.split()[1].lower()
             if cmd == "help":
                 help_msg = "The available commands are {0}".format(repr(self.commands.keys()))
                 m = "{0}: {1}".format(user, help_msg)
                 c.privmsg(e.target(), m)
             elif cmd == "learn" and user in self.operators and '"' in msg:
-                command = msg.split()[2]
+                command = msg.split()[2].lower()
                 args = re.findall('"([^"]*)"', msg)
                 if args and len(args) == 1:
                     self.commands[command] = args[0]
