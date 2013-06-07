@@ -73,7 +73,7 @@ DEBUG = False
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS = ["#wfs-india", "#sunu"]
+CHANNELS = ["#sunu"]
 OPERATORS = ["kaustavdm", "sunu", "SunuTheNinja"]
 NICK = "floggy"
 NICK_PASS = ""
@@ -99,9 +99,11 @@ DEFAULT_TIMEZONE = 'UTC+5:30'
 
 default_commands = {
     "hi": "Hello wonderful person!",
-    "hi": "Hello wonderful person!",
+    "hi!": "Hello wonderful person!",
     "hello": "Hi! How're you doing?",
     "hello!": "Hi! How're you doing?",
+    "bye": "Bye! It was nice having you here, do come back soon! :=)",
+    "bye!": "Bye! It was nice having you here, do come back soon! :=) ",
     "logs": "IRC chat logs can be found at http://irclogs.wfs-india.org",
     "website": "Please visit us at http://www.wfs-india.org",
     "who are you?": "Hi, I am LoggerBotX, junior assistant of Darth Vader from the planet Vulcan,\
@@ -112,7 +114,9 @@ default_commands = {
 
 default_feed_commands = {
     "events": "http://www.wfs-india.org/taxonomy/term/9/all/feed",
+    "latest events": "http://www.wfs-india.org/taxonomy/term/9/all/feed",
     "news": "http://www.wfs-india.org/taxonomy/term/5/all/feed",
+    "latest news": "http://www.wfs-india.org/taxonomy/term/5/all/feed",
     "articles": "http://www.wfs-india.org/taxonomy/term/10/all/feed",
 }
 
@@ -492,8 +496,8 @@ class Logbot(SingleServerIRCBot):
                     c.privmsg(e.target(), m)
                 else:
                     entries = []
-                    for feed in feeds:
-                        entries.append("{0} : {1}  ||  ".format(feed['title'], feed['link']))
+                    for (counter,feed) in enumerate(feeds, start=1):
+                        entries.append("({0}){1} : {2}    ".format(counter, feed['title'], feed['link']))
                     m = "{0}: These are our recent events - {1}".format(user, ''.join(entries))
                     c.privmsg(e.target(), m)
 
@@ -505,7 +509,19 @@ class Logbot(SingleServerIRCBot):
                     match = 1
                 if not match:
                     cmd = msg.split(' ', 1)[1].lower()
-                    if cmd in self.commands.keys():
+                    if cmd in self.feed_commands:
+                        feeds = feedparser.parse(self.feed_commands[cmd])["entries"][:5]
+                        if not feeds:
+                            m = "{0}: No entries in {1} yet! Check back later.".format(user, cmd)
+                            c.privmsg(e.target(), m)
+                        else:
+                            entries = []
+                            for (counter,feed) in enumerate(feeds, start=1):
+                                entries.append("({0}){1} : {2}    ".format(counter, feed['title'], feed['link']))
+                            m = "{0}: These are our recent events - {1}".format(user, ''.join(entries))
+                            c.privmsg(e.target(), m)
+
+                    elif cmd in self.commands.keys():
                         m = "{0}: {1}".format(user, self.commands[cmd])
                         c.privmsg(e.target(), m)
                         match = 1
