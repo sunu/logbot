@@ -73,7 +73,7 @@ DEBUG = False
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS = ["#wfs-india"]
+CHANNELS = ["#wfs-india", "#sunu"]
 OPERATORS = ["kaustavdm", "sunu", "SunuTheNinja"]
 NICK = "floggy"
 NICK_PASS = ""
@@ -82,7 +82,7 @@ NICK_PASS = ""
 LOG_FOLDER = "logs"
 
 HELP_MSG = "WFS-India - Women in Free Software and Culture in India - www.wfs-india.org. \
-Some useful commands - 'logs', 'website', 'events'. Usage: {1}: <command>"
+Some useful commands - 'logs', 'website', 'events'. Usage: {0}: <command>"
 
 
 # FTP Configuration
