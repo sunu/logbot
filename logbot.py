@@ -71,7 +71,7 @@ DEBUG = False
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS = ["#wfs-india"]
+CHANNELS = ["#wfs-india", "#sunu"]
 OPERATORS = ["sunu", "SunuTheNinja"]
 NICK = "floggy"
 NICK_PASS = ""
@@ -79,8 +79,8 @@ NICK_PASS = ""
 # The local folder to save logs
 LOG_FOLDER = "logs"
 
-HELP_MSG = """WFS-India - Women in Free Software and Culture in India - www.wfs-india.org.
-Useful commands - {0}. Usage: {1}: <command>"""
+HELP_MSG = "WFS-India - Women in Free Software and Culture in India - www.wfs-india.org. \
+Useful commands - {0}. Usage: {1}: <command>"
 
 
 # FTP Configuration
@@ -439,10 +439,15 @@ class Logbot(SingleServerIRCBot):
                 m = "{0}: {1}".format(user, help_msg)
                 c.privmsg(e.target(), m)
             elif cmd == "learn" and user in self.operators and '"' in msg:
-                command = msg.split()[2].lower()
                 args = re.findall('"([^"]*)"', msg)
                 if args and len(args) == 1:
+                    command = msg.split()[2].lower()
                     self.commands[command] = args[0]
+                    m = "{0}: All done!".format(user)
+                    c.privmsg(e.target(), m)
+                elif args and len(args) == 2:
+                    command = args[0].lower()
+                    self.commands[command] = args[1]
                     m = "{0}: All done!".format(user)
                     c.privmsg(e.target(), m)
             elif cmd == "addop" and user in self.operators:
@@ -451,11 +456,21 @@ class Logbot(SingleServerIRCBot):
                 m = "{0}: {1} has been added as an operator".format(user, candidate)
                 c.privmsg(e.target(), m)
             else:
+                match = 0
                 for k in self.commands.keys():
                     if k == cmd:
                         m = "{0}: {1}".format(user, self.commands[k])
                         c.privmsg(e.target(), m)
-
+                        match = 1
+                        break
+                if not match:
+                    cmd = msg.split(' ', 1)[1].lower()
+                    for k in self.commands.keys():
+                        if k == cmd:
+                            m = "{0}: {1}".format(user, self.commands[k])
+                            c.privmsg(e.target(), m)
+                            match = 1
+                            break
         self.write_event("pubmsg", e)
 
     def on_pubnotice(self, c, e):
@@ -463,7 +478,8 @@ class Logbot(SingleServerIRCBot):
 
     def on_privmsg(self, c, e):
         print nm_to_n(e.source()), e.arguments()
-        c.privmsg(nm_to_n(e.source()), self.format["help"])
+        help_msg = HELP_MSG.format(repr(self.commands.keys()), NICK)
+        c.privmsg(nm_to_n(e.source()), help_msg)
 
     def on_quit(self, c, e):
         nick = nm_to_n(e.source())
