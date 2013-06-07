@@ -400,6 +400,10 @@ class Logbot(SingleServerIRCBot):
         self.write_event("action", e)
 
     def on_join(self, c, e):
+        user = e.source().split("!")[0]
+        m = "{0}: Hi! Welcome aboard on #wfs-india. Enjoy your stay here!".format(user)
+        c.privmsg(e.target(), m)
+        self.write_event("pubmsg", e)
         self.write_event("join", e)
 
     def on_kick(self, c, e):
@@ -440,6 +444,7 @@ class Logbot(SingleServerIRCBot):
                 c.privmsg(e.target(), m)
             elif cmd == "learn" and user in self.operators and '"' in msg:
                 args = re.findall('"([^"]*)"', msg)
+                print args
                 if args and len(args) == 1:
                     command = msg.split()[2].lower()
                     self.commands[command] = args[0]
@@ -450,6 +455,15 @@ class Logbot(SingleServerIRCBot):
                     self.commands[command] = args[1]
                     m = "{0}: All done!".format(user)
                     c.privmsg(e.target(), m)
+            elif cmd == "forget" and user in self.operators:
+                args = re.findall('"([^"]*)"', msg)
+                if args and len(args) == 1:
+                    arg = args[0]
+                    if arg in self.commands:
+                        del self.commands[arg]
+                        m = "{0}: All done!".format(user)
+                        c.privmsg(e.target(), m)
+
             elif cmd == "addop" and user in self.operators:
                 candidate = msg.split()[2]
                 self.operators.append(candidate)
