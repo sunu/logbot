@@ -422,7 +422,8 @@ class Logbot(SingleServerIRCBot):
     def on_join(self, c, e):
         user = e.source().split("!")[0]
         if user != NICK:
-            m = "{0}: Hi! Welcome aboard on #wfs-india. Enjoy your stay here!".format(user)
+            m = "{0}: Hi! Welcome aboard on #wfs-india. Enjoy your stay here!\
+                For help type {1}: help".format(user, NICK)
             c.privmsg(e.target(), m)
             #self.write_event("pubmsg", e)
         self.write_event("join", e)
