@@ -494,7 +494,7 @@ class Logbot(SingleServerIRCBot):
                     entries = []
                     for feed in feeds:
                         entries.append("{0} : {1}  ||  ".format(feed['title'], feed['link']))
-                    m = "{0}: These are our 5 recent events - {1}".format(user, ''.join(entries))
+                    m = "{0}: These are our recent events - {1}".format(user, ''.join(entries))
                     c.privmsg(e.target(), m)
 
             else:
