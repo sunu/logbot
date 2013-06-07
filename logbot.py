@@ -71,13 +71,17 @@ DEBUG = False
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS = ["#sunu", "#wfs-india"]
+CHANNELS = ["#wfs-india"]
 OPERATORS = ["sunu", "SunuTheNinja"]
-NICK = "LoggerBotX"
+NICK = "floggy"
 NICK_PASS = ""
 
 # The local folder to save logs
 LOG_FOLDER = "logs"
+
+HELP_MSG = """WFS-India - Women in Free Software and Culture in India - www.wfs-india.org.
+Useful commands - {0}. Usage: {1}: <command>"""
+
 
 # FTP Configuration
 FTP_SERVER = ""
@@ -93,7 +97,8 @@ DEFAULT_TIMEZONE = 'UTC+5:30'
 
 default_commands = {
     "hi": "Hello wonderful person!",
-    "logs": "oh noes, I forgot where they were",
+    "logs": "IRC chat logs can be found at http://irclogs.wfs-india.org",
+    "website": "Please visit us at http://www.wfs-india.org"
 }
 
 default_format = {
@@ -430,7 +435,7 @@ class Logbot(SingleServerIRCBot):
             user = e.source().split("!")[0]
             cmd = msg.split()[1].lower()
             if cmd == "help":
-                help_msg = "The available commands are {0}".format(repr(self.commands.keys()))
+                help_msg = HELP_MSG.format(repr(self.commands.keys()), NICK)
                 m = "{0}: {1}".format(user, help_msg)
                 c.privmsg(e.target(), m)
             elif cmd == "learn" and user in self.operators and '"' in msg:
