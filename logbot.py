@@ -42,7 +42,8 @@ from time import strftime
 try:
     from datetime import datetime
     from pytz import timezone
-except: pass
+except:
+    pass
 
 try:
     from hashlib import md5
@@ -58,6 +59,7 @@ pat1 = re.compile(r"(^|[\n ])(([\w]+?://[\w\#$%&~.\-;:=,?@\[\]+]*)(/[\w\#$%&~/.\
 
 #urlfinder = re.compile("(?i)\b((?:[a-z][\w-]+:(?:/{1,3}|[a-z0-9%])|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))")
 
+
 def urlify2(value):
     return pat1.sub(r'\1<a href="\2" target="_blank">\3</a>', value)
     #return urlfinder.sub(r'<a href="\1">\1</a>', value)
@@ -69,7 +71,7 @@ DEBUG = False
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS=["#sunu", "#wfs-india"]
+CHANNELS = ["#sunu", "#wfs-india"]
 OPERATORS = ["sunu", "SunuTheNinja"]
 NICK = "LoggerBotX"
 NICK_PASS = ""
@@ -149,10 +151,12 @@ def append_line(filename, line):
     data += [line, "\n<br />", "\n</body>", "\n</html>"]
     write_lines(filename, data)
 
+
 def write_lines(filename, lines):
     f = open(filename, "wb")
     f.writelines(lines)
     f.close()
+
 
 def write_string(filename, string):
     f = open(filename, "wb")
@@ -161,6 +165,7 @@ def write_string(filename, string):
 
 color_pattern = re.compile(r'(\[\d{1,2}m)')
 "Pattern that matches ANSI color codes and the text that follows"
+
 
 def pairs(items):
     """
@@ -172,6 +177,7 @@ def pairs(items):
     items = iter(items)
     while True:
         yield next(items), next(items)
+
 
 def html_color(input):
     """
@@ -188,6 +194,7 @@ def html_color(input):
     rest = itertools.starmap(replace_color, pairs(parts))
     return ''.join(itertools.chain(first, rest))
 
+
 def replace_color(code, text):
     code = code.lstrip('[').rstrip('m')
     colors = {
@@ -203,13 +210,13 @@ def replace_color(code, text):
     if code not in colors:
         return text
     return '<span style="color: #%(color)s">%(text)s</span>' % dict(
-        color = colors[code],
-        text = text,
+        color=colors[code],
+        text=text,
     )
 
-### Logbot class
 
 class Logbot(SingleServerIRCBot):
+    """The Bot."""
     def __init__(self, server, port, server_pass=None, channels=[],
                  nick="timber", nick_pass=None, format=default_format, commands=default_commands,
                  operators=OPERATORS):
@@ -249,22 +256,25 @@ class Logbot(SingleServerIRCBot):
         # and %channel% with e.target()
         msg = msg.replace("%user%", nm_to_n(event.source()))
         msg = msg.replace("%host%", event.source())
-        try: msg = msg.replace("%channel%", event.target())
-        except: pass
+        try:
+            msg = msg.replace("%channel%", event.target())
+        except:
+            pass
         msg = msg.replace("%color%", self.color(nm_to_n(event.source())))
         try:
             user_message = cgi.escape(event.arguments()[0])
             msg = msg.replace("%message%", html_color(user_message))
-        except: pass
+        except:
+            pass
 
         return msg
 
     def write_event(self, name, event, params={}):
         # Format the event properly
         if name == 'nick' or name == 'quit':
-          chans = params["%chan%"]
+            chans = params["%chan%"]
         else:
-          chans = event.target()
+            chans = event.target()
         msg = self.format_event(name, event, params)
         msg = urlify2(msg)
 
@@ -292,20 +302,25 @@ class Logbot(SingleServerIRCBot):
                         remote_fname = "/".join(full_fname.split("\\")[1:])
                     else:
                         remote_fname = "/".join(full_fname.split("/")[1:])
-                    if DEBUG: print repr(remote_fname)
+                    if DEBUG:
+                        print repr(remote_fname)
 
                     # Upload!
-                    try: self.ftp.storbinary("STOR %s" % remote_fname, open(full_fname, "rb"))
+                    try:
+                        self.ftp.storbinary("STOR %s" % remote_fname, open(full_fname, "rb"))
                     # Folder doesn't exist, try creating it and storing again
-                    except ftplib.error_perm, e: #code, error = str(e).split(" ", 1)
+                    except ftplib.error_perm, e:  # code, error = str(e).split(" ", 1)
                         if str(e).split(" ", 1)[0] == "553":
                             self.ftp.mkd(os.path.dirname(remote_fname))
                             self.ftp.storbinary("STOR %s" % remote_fname, open(full_fname, "rb"))
-                        else: raise e
+                        else:
+                            raise e
                     # Reconnect on timeout
-                    except ftplib.error_temp, e: self.set_ftp(connect_ftp())
+                    except ftplib.error_temp, e:
+                        self.set_ftp(connect_ftp())
                     # Unsure of error, try reconnecting
-                    except:                      self.set_ftp(connect_ftp())
+                    except:
+                        self.set_ftp(connect_ftp())
 
             print "Finished uploading"
 
@@ -328,7 +343,7 @@ class Logbot(SingleServerIRCBot):
 
         # Current log
         try:
-            localtime = datetime.now(timezone(self.channel_locations.get(channel,DEFAULT_TIMEZONE)))
+            localtime = datetime.now(timezone(self.channel_locations.get(channel, DEFAULT_TIMEZONE)))
             time = localtime.strftime("%H:%M:%S")
             date = localtime.strftime("%Y-%m-%d")
         except:
@@ -346,19 +361,20 @@ class Logbot(SingleServerIRCBot):
 
         # Append current message
         message = "<a href=\"#%s\" name=\"%s\" class=\"time\">[%s]</a> %s" % \
-                                          (time, time, time, msg)
+            (time, time, time, msg)
         append_line(log_path, message)
 
     ### These are the IRC events
 
     def on_all_raw_messages(self, c, e):
         """Display all IRC connections in terminal"""
-        if DEBUG: print e.arguments()[0]
+        if DEBUG:
+            print e.arguments()[0]
 
     def on_welcome(self, c, e):
         """Join channels after successful connection"""
         if self.nick_pass:
-          c.privmsg("nickserv", "identify %s" % self.nick_pass)
+            c.privmsg("nickserv", "identify %s" % self.nick_pass)
 
         for chan in self.chans:
             c.join(chan)
@@ -383,18 +399,16 @@ class Logbot(SingleServerIRCBot):
 
     def on_kick(self, c, e):
         self.write_event("kick", e,
-                         {"%kicker%" : e.source(),
-                          "%channel%" : e.target(),
-                          "%user%" : e.arguments()[0],
-                          "%reason%" : e.arguments()[1],
-                         })
+                         {"%kicker%": e.source(),
+                          "%channel%": e.target(),
+                          "%user%": e.arguments()[0],
+                          "%reason%": e.arguments()[1], })
 
     def on_mode(self, c, e):
         self.write_event("mode", e,
-                         {"%modes%" : e.arguments()[0],
-                          "%person%" : e.arguments()[1] if len(e.arguments()) > 1 else e.target(),
-                          "%giver%" : nm_to_n(e.source()),
-                         })
+                         {"%modes%": e.arguments()[0],
+                          "%person%": e.arguments()[1] if len(e.arguments()) > 1 else e.target(),
+                          "%giver%": nm_to_n(e.source()), })
 
     def on_nick(self, c, e):
         old_nick = nm_to_n(e.source())
@@ -402,10 +416,9 @@ class Logbot(SingleServerIRCBot):
         for chan in self.channels:
             if old_nick in [x.lstrip('~%&@+') for x in self.channels[chan].users()]:
                 self.write_event("nick", e,
-                             {"%old%" : old_nick,
-                              "%new%" : e.target(),
-                              "%chan%": chan,
-                             })
+                                 {"%old%": old_nick,
+                                  "%new%": e.target(),
+                                  "%chan%": chan, })
 
     def on_part(self, c, e):
         self.write_event("part", e)
@@ -452,7 +465,7 @@ class Logbot(SingleServerIRCBot):
         # Only write the event on channels that actually had the user in the channel
         for chan in self.channels:
             if nick in [x.lstrip('~%&@+') for x in self.channels[chan].users()]:
-                self.write_event("quit", e, {"%chan%" : chan})
+                self.write_event("quit", e, {"%chan%": chan})
 
     def on_topic(self, c, e):
         self.write_event("topic", e)
@@ -463,13 +476,15 @@ class Logbot(SingleServerIRCBot):
         self.channel_locations = {}
         if os.path.exists(CHANNEL_LOCATIONS_FILE):
             f = open(CHANNEL_LOCATIONS_FILE, 'r')
-            self.channel_locations = dict((k.lower(), v) for k, v in dict([line.strip().split(None,1) for line in f.readlines()]).iteritems())
+            self.channel_locations = dict((k.lower(), v) for k, v in dict([line.strip().split(None, 1) for line in f.readlines()]).iteritems())
+
 
 def connect_ftp():
     print "Using FTP %s..." % (FTP_SERVER)
     f = ftplib.FTP(FTP_SERVER, FTP_USER, FTP_PASS)
     f.cwd(FTP_FOLDER)
     return f
+
 
 def main():
     # Create the logs directory
@@ -486,10 +501,10 @@ def main():
 
         bot.start()
     except KeyboardInterrupt:
-        if FTP_SERVER: bot.ftp.quit()
+        if FTP_SERVER:
+            bot.ftp.quit()
         bot.quit()
 
 
 if __name__ == "__main__":
     main()
-
