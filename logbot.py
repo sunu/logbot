@@ -54,6 +54,7 @@ except:
 
 from ircbot import SingleServerIRCBot
 from irclib import nm_to_n
+from commands import commands
 
 import re
 
@@ -73,7 +74,7 @@ DEBUG = False
 SERVER = "irc.freenode.net"
 PORT = 6667
 SERVER_PASS = None
-CHANNELS = ["#wfs-india", "#sunu"]
+CHANNELS = ["#sunu1"]
 OPERATORS = ["kaustavdm", "sunu", "SunuTheNinja"]
 NICK = "floggy"
 NICK_PASS = ""
@@ -97,21 +98,7 @@ FTP_WAIT = 25
 CHANNEL_LOCATIONS_FILE = os.path.expanduser("~/.logbot-channel_locations.conf")
 DEFAULT_TIMEZONE = 'UTC+5:30'
 
-default_commands = {
-    "hi": "Hello wonderful person!",
-    "hi!": "Hello wonderful person!",
-    "hello": "Hi! How're you doing?",
-    "hello!": "Hi! How're you doing?",
-    "bye": "Bye! It was nice having you here, do come back soon! :=)",
-    "bye!": "Bye! It was nice having you here, do come back soon! :=) ",
-    "logs": "IRC chat logs can be found at http://irclogs.wfs-india.org",
-    "website": "Please visit us at http://www.wfs-india.org",
-    "who are you?": "Hi, I am Floggy, junior assistant of Darth Vader from the planet Vulcan,\
-    and a bot on the #wfs-india channel on freenode.",
-    "who are you": "Hi, I am Floggy, junior assistant of Darth Vader from the planet Vulcan,\
-    and a bot on the #wfs-india channel on freenode.",
-    "code": "My code is at https://github.com/sunu/logbot. Feel free to fork me."
-}
+default_commands = commands
 
 default_feed_commands = {
     "events": "http://www.wfs-india.org/taxonomy/term/9/all/feed",
@@ -390,6 +377,11 @@ class Logbot(SingleServerIRCBot):
             (time, time, time, msg)
         append_line(log_path, message)
 
+    def write_commands(self):
+        f = open('commands.py', 'w')
+        f.write("commands = {0}".format(self.commands))
+        f.close()
+
     ### These are the IRC events
 
     def on_all_raw_messages(self, c, e):
@@ -473,6 +465,7 @@ class Logbot(SingleServerIRCBot):
                 if args and len(args) == 2:
                     command = args[0].lower()
                     self.commands[command] = args[1]
+                    self.write_commands()
                     m = "{0}: All done!".format(user)
                     c.privmsg(e.target(), m)
             elif cmd == "forget" and user in self.operators:
