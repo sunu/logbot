@@ -106,10 +106,10 @@ default_commands = {
     "bye!": "Bye! It was nice having you here, do come back soon! :=) ",
     "logs": "IRC chat logs can be found at http://irclogs.wfs-india.org",
     "website": "Please visit us at http://www.wfs-india.org",
-    "who are you?": "Hi, I am LoggerBotX, junior assistant of Darth Vader from the planet Vulcan,\
-                    and a bot on the #wfs-india channel on freenode.",
-    "who are you": "Hi, I am LoggerBotX, junior assistant of Darth Vader from the planet Vulcan,\
-                    and a bot on the #wfs-india channel on freenode.",
+    "who are you?": "Hi, I am Floggy, junior assistant of Darth Vader from the planet Vulcan,\
+    and a bot on the #wfs-india channel on freenode.",
+    "who are you": "Hi, I am Floggy, junior assistant of Darth Vader from the planet Vulcan,\
+    and a bot on the #wfs-india channel on freenode.",
     "code": "My code is at https://github.com/sunu/logbot. Feel free to fork me."
 }
 
