@@ -474,6 +474,7 @@ class Logbot(SingleServerIRCBot):
                     arg = args[0]
                     if arg in self.commands:
                         del self.commands[arg]
+                        self.write_commands()
                         m = "{0}: All done!".format(user)
                         c.privmsg(e.target(), m)
 
