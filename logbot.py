@@ -392,8 +392,13 @@ class Logbot(SingleServerIRCBot):
         alias_map = {}
         for command in self.alias_dict:
             for alias in self.alias_dict[command]:
-                alias_map[alias] = command
+                alias_map[alias.lower()] = command.lower()
         return alias_map
+
+    def write_aliases(self):
+        f = open('aliases.py', 'w')
+        f.write("alias_dict = {0}".format(pformat(self.alias_dict)))
+        f.close()
 
     ### These are the IRC events
 
@@ -490,6 +495,19 @@ class Logbot(SingleServerIRCBot):
                         self.write_commands()
                         m = "{0}: All done!".format(user)
                         c.privmsg(e.target(), m)
+            elif cmd == "alias" and user in self.operators:
+                args = re.findall('"([^"]*)"', msg)
+                if args and len(args) == 2 and args[0].lower() in self.commands.keys():
+                    if args[0] in self.alias_dict:
+                        a_list = self.alias_dict[args[0].lower()]
+                    else:
+                        a_list = self.alias_dict[args[0].lower()] = []
+                    if args[1] not in a_list:
+                        a_list.append(args[1].lower())
+                        self.write_aliases()
+                        self.alias_map = self.make_alias_map()
+                        m = "{0}: Alias added!".format(user)
+                        c.privmsg(e.target(), m)
 
             elif cmd == "addop" and user in self.operators:
                 candidate = msg.split()[2]
@@ -504,7 +522,7 @@ class Logbot(SingleServerIRCBot):
                     c.privmsg(e.target(), m)
                 else:
                     entries = []
-                    for (counter,feed) in enumerate(feeds, start=1):
+                    for (counter, feed) in enumerate(feeds, start=1):
                         entries.append("({0}){1} : {2}    ".format(counter, feed['title'], feed['link']))
                     m = "{0}: {1}:- {2}".format(user, cmd.title(), ''.join(entries))
                     c.privmsg(e.target(), m)
