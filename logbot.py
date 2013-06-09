@@ -41,6 +41,7 @@ import itertools
 import feedparser
 
 from time import strftime
+from pprint import pformat
 try:
     from datetime import datetime
     from pytz import timezone
@@ -55,6 +56,7 @@ except:
 from ircbot import SingleServerIRCBot
 from irclib import nm_to_n
 from commands import commands
+from aliases import alias_dict
 
 import re
 
@@ -99,6 +101,7 @@ CHANNEL_LOCATIONS_FILE = os.path.expanduser("~/.logbot-channel_locations.conf")
 DEFAULT_TIMEZONE = 'UTC+5:30'
 
 default_commands = commands
+default_alias_dict = alias_dict
 
 default_feed_commands = {
     "events": "http://www.wfs-india.org/taxonomy/term/9/all/feed",
@@ -231,7 +234,8 @@ class Logbot(SingleServerIRCBot):
     """The Bot."""
     def __init__(self, server, port, server_pass=None, channels=[],
                  nick="timber", nick_pass=None, format=default_format, commands=default_commands,
-                 operators=OPERATORS, feed_commands = default_feed_commands):
+                 operators=OPERATORS, feed_commands=default_feed_commands,
+                 alias_dict=default_alias_dict):
         SingleServerIRCBot.__init__(self,
                                     [(server, port, server_pass)],
                                     nick,
@@ -240,6 +244,8 @@ class Logbot(SingleServerIRCBot):
         self.chans = [x.lower() for x in channels]
         self.format = format
         self.commands = commands
+        self.alias_dict = alias_dict
+        self.alias_map = self.make_alias_map()
         self.feed_commands = feed_commands
         self.operators = operators
         self.set_ftp()
@@ -379,8 +385,15 @@ class Logbot(SingleServerIRCBot):
 
     def write_commands(self):
         f = open('commands.py', 'w')
-        f.write("commands = {0}".format(self.commands))
+        f.write("commands = {0}".format(pformat(self.commands)))
         f.close()
+
+    def make_alias_map(self):
+        alias_map = {}
+        for command in self.alias_dict:
+            for alias in self.alias_dict[command]:
+                alias_map[alias] = command
+        return alias_map
 
     ### These are the IRC events
 
@@ -502,6 +515,11 @@ class Logbot(SingleServerIRCBot):
                     m = "{0}: {1}".format(user, self.commands[cmd])
                     c.privmsg(e.target(), m)
                     match = 1
+                elif cmd in self.alias_map.keys():
+                    cmd = self.alias_map[cmd]
+                    m = "{0}: {1}".format(user, self.commands[cmd])
+                    c.privmsg(e.target(), m)
+                    match = 1
                 if not match:
                     cmd = msg.split(' ', 1)[1].lower()
                     if cmd in self.feed_commands:
@@ -511,7 +529,7 @@ class Logbot(SingleServerIRCBot):
                             c.privmsg(e.target(), m)
                         else:
                             entries = []
-                            for (counter,feed) in enumerate(feeds, start=1):
+                            for (counter, feed) in enumerate(feeds, start=1):
                                 entries.append("({0}){1} : {2}    ".format(counter, feed['title'], feed['link']))
                             m = "{0}: {1}:- {2}".format(user, cmd.title(), ''.join(entries))
                             c.privmsg(e.target(), m)
@@ -519,7 +537,12 @@ class Logbot(SingleServerIRCBot):
                     elif cmd in self.commands.keys():
                         m = "{0}: {1}".format(user, self.commands[cmd])
                         c.privmsg(e.target(), m)
-                        match = 1
+
+                    elif cmd in self.alias_map.keys():
+                        cmd = self.alias_map[cmd]
+                        m = "{0}: {1}".format(user, self.commands[cmd])
+                        c.privmsg(e.target(), m)
+
         self.write_event("pubmsg", e)
 
     def on_pubnotice(self, c, e):
