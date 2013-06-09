@@ -515,6 +515,10 @@ class Logbot(SingleServerIRCBot):
                 m = "{0}: {1} has been added as an operator".format(user, candidate)
                 c.privmsg(e.target(), m)
 
+            elif cmd == "join" and user in self.operators:
+                channel = msg.split()[2]
+                c.join(channel)
+
             elif cmd in self.feed_commands:
                 feeds = feedparser.parse(self.feed_commands[cmd])["entries"][:5]
                 if not feeds:
